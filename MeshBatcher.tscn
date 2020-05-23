@@ -1,52 +1,39 @@
-[gd_scene load_steps=4 format=2]
+[gd_scene load_steps=3 format=2]
 
 [ext_resource path="res://addons/MultiMeshBatcher/Batcher_Node.gd" type="Script" id=1]
 
-[sub_resource type="SphereMesh" id=1]
-
-[sub_resource type="MultiMesh" id=2]
-transform_format = 1
-mesh = SubResource( 1 )
+[sub_resource type="CubeMesh" id=1]
 
 [node name="MeshBatcher" type="Spatial"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.450162, 0 )
 script = ExtResource( 1 )
 
 [node name="MeshInstance" type="MeshInstance" parent="."]
+transform = Transform( -0.143733, -0.511773, -0.847012, -0.0856208, 0.859121, -0.50456, 0.985906, 0, -0.167302, 0, -1.38998, 0 )
 mesh = SubResource( 1 )
 material/0 = null
 
 [node name="MeshInstance2" type="MeshInstance" parent="."]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 8.17896, 0, 0 )
+transform = Transform( -0.143733, -0.511773, -0.847012, -0.0856208, 0.859121, -0.50456, 0.985906, 0, -0.167302, 0, 0.482653, -3.85972 )
 mesh = SubResource( 1 )
 material/0 = null
 
 [node name="MeshInstance3" type="MeshInstance" parent="."]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 8.17896, 0, 4.10426 )
-visible = false
+transform = Transform( 0.823374, 0.567499, 0, -0.52925, 0.76788, 0.360909, 0.204815, -0.297163, 0.932601, 4.928, 0, 0 )
 mesh = SubResource( 1 )
 material/0 = null
 
 [node name="MeshInstance4" type="MeshInstance" parent="."]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -4.56069, 0, 4.10426 )
+transform = Transform( 0.696758, 0.150607, 0.701317, -0.52925, 0.76788, 0.360909, -0.484172, -0.622638, 0.614735, 4.928, 0, 4.33657 )
 mesh = SubResource( 1 )
 material/0 = null
 
 [node name="MeshInstance5" type="MeshInstance" parent="."]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -4.56069, 0, -2.45945 )
+transform = Transform( 0.696758, 0.150607, 0.701317, -0.52925, 0.76788, 0.360909, -0.484172, -0.622638, 0.614735, -5.93173, 0, -7.2668 )
 mesh = SubResource( 1 )
 material/0 = null
 
 [node name="MeshInstance6" type="MeshInstance" parent="."]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -4.56069, 2.80865, -2.45945 )
-visible = false
+transform = Transform( 0.257322, 0.57018, 0.780179, -0.836279, 0.535926, -0.115846, -0.484172, -0.622638, 0.614735, -5.93173, 0, -0.500356 )
 mesh = SubResource( 1 )
 material/0 = null
-
-[node name="MeshInstance7" type="MeshInstance" parent="."]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.704464, 2.80865, -2.45945 )
-visible = false
-mesh = SubResource( 1 )
-material/0 = null
-
-[node name="BatchedMesh" type="MultiMeshInstance" parent="."]
-multimesh = SubResource( 2 )
