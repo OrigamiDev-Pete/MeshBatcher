@@ -31,7 +31,7 @@ config/icon="res://icon.png"
 
 [editor_plugins]
 
-enabled=PoolStringArray( "MultiMeshBatcher" )
+enabled=PoolStringArray( "MultiMeshBatcher", "zylann.hterrain" )
 
 [rendering]
 

@@ -49,6 +49,8 @@ func _menu_item_pressed(id : int):
 	match id:
 		Menu.BATCH:
 			_node.batch()
+			update_overlays()
 		
 		Menu.UNBATCH:
 			_node.unbatch()
+			update_overlays()
