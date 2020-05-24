@@ -11,7 +11,8 @@ func _ready() -> void:
 	if Engine.editor_hint:
 		return
 	else:
-		batch_on_run()
+		if batch_at_runtime:
+			batch_on_run()
 
 func batch_on_run() -> void:
 	# Automatically batch meshes if they are not already batched for improved performance
