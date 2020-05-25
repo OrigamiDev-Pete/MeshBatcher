@@ -7,5 +7,5 @@
 - Options to batch and unbatch MultiMeshInstances in editor
 - MeshInstances inside the MeshBatcher node can automatically convert to a MultiMeshInstance at runtime so there's no need to batch and unbatch while you're working (unless you want to)!
 
-## Roadmap
-- Add collision meshes for static bodies
+## Compatible with StaticBodies (Version 1.1)
+- MeshBatcher will now detect if MeshInstances have StaticBodies allowing for collisions with a MultiMeshInstance.
