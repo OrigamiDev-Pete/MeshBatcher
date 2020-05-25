@@ -54,3 +54,4 @@ func _menu_item_pressed(id : int):
 		Menu.UNBATCH:
 			_node.unbatch()
 			get_editor_interface().get_inspector().refresh()
+

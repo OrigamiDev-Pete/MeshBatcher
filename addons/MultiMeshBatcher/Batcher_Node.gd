@@ -5,6 +5,7 @@ export var batch_at_runtime : bool = true
 
 export var _transforms : Array = []
 export var _batchedmmi : NodePath
+export var _collision_ref : NodePath
 
 
 func _ready() -> void:
@@ -96,6 +97,7 @@ func unbatch() -> void:
 				
 				add_child(mesh)
 				mesh.set_owner(get_tree().get_edited_scene_root())
+				reallocate_collision(mesh)
 			
 			mmi.queue_free()
 			print("Unbatched " + str(mmi) + " into " + str(mm.instance_count) + " instances.")
@@ -115,19 +117,51 @@ func unbatch() -> void:
 			
 			add_child(mesh)
 			mesh.set_owner(get_tree().get_edited_scene_root())
+			reallocate_collision(mesh)
 		
 		mmi.queue_free()
 		print("Unbatched " + str(mmi) + " into " + str(mm.instance_count) + " instances.")
 	_transforms.clear()
+	get_node(_collision_ref).queue_free()
+	_collision_ref = ""
 	_batchedmmi = ""
+
+
+func batch_with_collision(staticbody : StaticBody, parent : MeshInstance) -> void:
+	if !has_node(_collision_ref):
+		var container := Spatial.new()
+		container.name = "Collisions"
+		add_child(container)
+		if Engine.editor_hint:
+			container.set_owner(get_tree().get_edited_scene_root())
+		_collision_ref = get_path_to(container)
+		
+	parent.remove_child(staticbody)
+	get_node(_collision_ref).add_child(staticbody)
+	staticbody.transform = parent.transform
+	
+	if Engine.editor_hint:
+		staticbody.set_owner(get_tree().get_edited_scene_root())
+		staticbody.get_child(0).set_owner(get_tree().get_edited_scene_root())
+
+
+func reallocate_collision(mesh : MeshInstance):
+	var staticbody := get_node(_collision_ref).get_child(0)
+	get_node(_collision_ref).remove_child(staticbody)
+	mesh.add_child(staticbody)
+	staticbody.transform = Transform.IDENTITY
+	staticbody.set_owner(get_tree().get_edited_scene_root())
+	staticbody.get_child(0).set_owner(get_tree().get_edited_scene_root())
+	
 
 
 func verify_nodes(nodes : Array) -> bool:
 	for i in nodes:
 		if i is MeshInstance:
+			if i.get_child(0) is StaticBody:
+				batch_with_collision(i.get_child(0), i)
 			continue
 		else:
-			# TODO: Create a popup
 			push_error("Only MeshInstances can be batched.")
 			return false
 	return true
@@ -151,16 +185,8 @@ func _get_configuration_warning() -> String:
 			continue
 		if children[i] is MultiMeshInstance:
 			continue
+		if children[i] is Spatial:
+			continue
 		else:
-			return "Only MeshInstances and MultiMeshInstances can be a child of this node."
+			return "Only MeshInstances or MultiMeshInstances can be a child of this node.\n If you want to batch collisions be sure to make the StaticBody a child of the MeshInstance."
 	return ""
-
-
-func _get_property_list() -> Array:
-	var properties = []
-	properties.append({
-		name = "Data",
-		type = TYPE_NIL,
-		usage = PROPERTY_USAGE_CATEGORY | PROPERTY_USAGE_SCRIPT_VARIABLE
-	})
-	return properties
