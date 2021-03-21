@@ -3,9 +3,11 @@ extends Spatial
 
 export var batch_at_runtime : bool = true
 
+#uses exported variables to store data when closing editor
 export var _transforms : Array = []
 export var _batchedmmi : NodePath
 export var _collision_ref : NodePath
+export var _scene_name : String
 
 
 func _ready() -> void:
@@ -13,118 +15,123 @@ func _ready() -> void:
 		return
 	else:
 		if batch_at_runtime:
-			batch_on_run()
+			batch()
 
-func batch_on_run() -> void:
+func get_material(mesh_instance:MeshInstance) -> Material:
+	
+	var material = mesh_instance.material_override
+	
+	if not material:
+		material = mesh_instance.get_surface_material(0)
+
+	return material
+
+func batch() -> void:
 	# Automatically batch meshes if they are not already batched for improved performance
 	# while running the scene
 	if _batchedmmi:
+		if Engine.editor_hint:
+			push_warning("Unbatch before rebatching.")
 		return
 	
 	var meshes := get_children()
 	var mesh_transforms : Array = []
+	
 	if verify_nodes(meshes):
 		if verify_meshes(meshes):
 			
+			#store mesh instance transforms and delete them
 			for i in meshes:
 				mesh_transforms.append(i.transform)
 				i.queue_free()
 			
+			#create the multi-mesh instance
 			var mm = MultiMesh.new()
 			var mmi = MultiMeshInstance.new()
 			mmi.name = "BatchedMultiMesh"
 			add_child(mmi)
+			
+			if Engine.editor_hint:
+				mmi.set_owner(get_tree().get_edited_scene_root())
 			
 			mmi.multimesh = mm
 			mm.mesh = meshes[0].mesh
 			mm.transform_format = MultiMesh.TRANSFORM_3D
 			mm.instance_count = mesh_transforms.size()
 			
+			#apply material (null if material is in mesh)
+			mmi.material_override = get_material(meshes[0])
+
 			# Set transforms to each mesh instance
 			for i in mm.instance_count:
 				mm.set_instance_transform(i, mesh_transforms[i])
+				
+			if Engine.editor_hint:
+				_batchedmmi = mmi.get_path()
+				_transforms = mesh_transforms # For faster unbatching
+				#store scene name if scene
+				_scene_name = meshes[0].filename
+				print(str(mm.instance_count) + " instances were batched.")
 
 
-func batch() -> void:
-	#Check if already baked
-	if _batchedmmi:
-		push_warning("Unbatch before rebatching.")
-		return
+func get_multimesh_instance() -> MultiMeshInstance:
 	
-	var meshes := get_children()
-	var mesh_transforms : Array = []
-	if verify_nodes(meshes):
-		if verify_meshes(meshes):
-			
-			for i in meshes:
-				mesh_transforms.append(i.transform)
-				i.queue_free()
-			
-			var mm = MultiMesh.new()
-			var mmi = MultiMeshInstance.new()
-			mmi.name = "BatchedMultiMesh"
-			add_child(mmi)
-			mmi.set_owner(get_tree().get_edited_scene_root())
-			
-			mmi.multimesh = mm
-			mm.mesh = meshes[0].mesh
-			mm.transform_format = MultiMesh.TRANSFORM_3D
-			mm.instance_count = mesh_transforms.size()
-			
-			# Set transforms to each mesh instance
-			for i in mm.instance_count:
-				mm.set_instance_transform(i, mesh_transforms[i])
-			_batchedmmi = mmi.get_path()
-			_transforms = mesh_transforms # For faster unbatching
-			print(str(mm.instance_count) + " instances were batched.")
-
+	var mmi
+	
+	if _batchedmmi == "":
+		if get_child_count() >= 1:
+			mmi = get_child(0)
+	else:
+		mmi = get_node(_batchedmmi)
+		
+	if mmi is MultiMeshInstance:
+		return mmi
+	
+	return null
 
 func unbatch() -> void:
-	if _batchedmmi == "":
-#		push_warning("Nothing to unbatch.")
-#		return
+	
+	var mmi = get_multimesh_instance()
+	
+	if mmi:
 		
-		#Check if there is a multimesh to unbatch
-		var mmi := get_child(0)
-		if mmi is MultiMeshInstance:
-			var mm : MultiMesh = mmi.multimesh
-			
-			# Get transforms from multimesh and set to each MeshInstance
-			for i in mm.instance_count:
-				var mesh := MeshInstance.new()
-				mesh.mesh = mm.mesh
-				mesh.transform = mm.get_instance_transform(i)
-				
-				add_child(mesh)
-				mesh.set_owner(get_tree().get_edited_scene_root())
-				reallocate_collision(mesh)
-			
-			mmi.queue_free()
-			print("Unbatched " + str(mmi) + " into " + str(mm.instance_count) + " instances.")
-			
-		else:
-			push_warning("Nothing to unbatch. Make sure a MultiMeshInstance Node is the first child of the MeshBatcher")
-			return
-	else:
-		var mmi = get_node(_batchedmmi)
 		var mm : MultiMesh = mmi.multimesh
 		
 		# Get transforms from multimesh and set to each MeshInstance
 		for i in mm.instance_count:
-			var mesh := MeshInstance.new()
-			mesh.mesh = mm.mesh
-			mesh.transform = _transforms[i]
+			var mesh
+			
+			if _scene_name:
+				mesh = load(_scene_name).instance()
+			else:
+				mesh = MeshInstance.new()
+				mesh.mesh = mm.mesh
+				
+			if _transforms:
+				mesh.transform = _transforms[i]
+			else:
+				mesh.transform = mm.get_instance_transform(i)
 			
 			add_child(mesh)
 			mesh.set_owner(get_tree().get_edited_scene_root())
-			reallocate_collision(mesh)
+			
+			if _collision_ref and not _scene_name:
+				reallocate_collision(mesh)
 		
 		mmi.queue_free()
 		print("Unbatched " + str(mmi) + " into " + str(mm.instance_count) + " instances.")
+		
+	else:
+		push_warning("Nothing to unbatch. Make sure a MultiMeshInstance Node is the first child of the MeshBatcher")
+	
 	_transforms.clear()
-	get_node(_collision_ref).queue_free()
+	
+	if _collision_ref:
+		get_node(_collision_ref).queue_free()
+
 	_collision_ref = ""
 	_batchedmmi = ""
+	_scene_name = ""
 
 
 func batch_with_collision(staticbody : StaticBody, parent : MeshInstance) -> void:
@@ -158,7 +165,7 @@ func reallocate_collision(mesh : MeshInstance):
 func verify_nodes(nodes : Array) -> bool:
 	for i in nodes:
 		if i is MeshInstance:
-			if i.get_child(0) is StaticBody:
+			if i.get_child_count() > 0 and i.get_child(0) is StaticBody:
 				batch_with_collision(i.get_child(0), i)
 			continue
 		else:
