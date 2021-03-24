@@ -11,7 +11,7 @@
 - Huge thank you to [Yogoda](https://github.com/Yogoda) for their significant contributions to this version of MeshBatcher.
 - Much of the code is refactored and now uses MultiMeshInstance as its base class to allow for a simpler and more robust implementation.
 - Material Overrides are kept and propogate to all meshes within the MeshBatcher node.
-- Multiple bugs and erros have been cleaned up.
+- Multiple bugs and errors have been cleaned up.
 
 ## Version 1.1 - Compatible with StaticBodies
 - MeshBatcher will now detect if MeshInstances have StaticBodies allowing for collisions with a MultiMeshInstance.
