@@ -10,7 +10,7 @@ var _toolbar : HBoxContainer = null
 var _node : MeshBatcher = null
 
 func _enter_tree() -> void:
-	add_custom_type("MeshBatcher", "Spatial", MeshBatcher, Icon)
+	add_custom_type("MeshBatcher", "MultiMeshInstance", MeshBatcher, Icon)
 	
 	# Editor UI
 	_toolbar = HBoxContainer.new()
