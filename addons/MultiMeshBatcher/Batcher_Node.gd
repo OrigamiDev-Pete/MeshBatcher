@@ -142,14 +142,18 @@ func verify_nodes(nodes : Array) -> bool:
 
 
 func verify_meshes(meshes : Array) -> bool:
-	var mesh_test = meshes[0].mesh
-	for i in meshes:
-		if i.mesh == mesh_test:
-			continue
-		else:
-			push_error("All meshes must be the same for batching.")
-			return false
-	return true
+	if meshes != []:
+		var mesh_test = meshes[0].mesh
+		for i in meshes:
+			if i.mesh == mesh_test:
+				continue
+			else:
+				push_error("All meshes must be the same for batching.")
+				return false
+		return true
+	else:
+		push_warning("No child meshes found! You must add mesh as children of MeshBatcher node.")
+		return false
 
 
 func _get_configuration_warning() -> String:
